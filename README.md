@@ -272,7 +272,7 @@ To run both backend and frontend concurrently with live reloading:
 
 1. **Start the Go Backend Server**:
    ```bash
-   go run ./cmd/server
+   go run ./server
    ```
    The backend API will start on `http://localhost:8080`.
 
