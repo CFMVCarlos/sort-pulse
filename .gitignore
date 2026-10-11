@@ -29,3 +29,15 @@ yarn-error.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Python & batch scripts
+__pycache__/
+*.py[cod]
+
+# Jules & patches
+.jules/
+*.patch
+docs/intent/
+scripts/jules_*
+scripts/dispatch_*
+scripts/create_jules_prs.py
