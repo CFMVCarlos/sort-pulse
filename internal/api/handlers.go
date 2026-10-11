@@ -7,10 +7,29 @@ import (
 	"sortpulse/internal/sorter"
 )
 
+// APIError represents a standardized JSON error response.
+type APIError struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
+// sendJSONError writes a standardized JSON error response.
+func sendJSONError(w http.ResponseWriter, message string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(APIError{
+		Status:  "error",
+		Message: message,
+		Code:    code,
+	})
+}
+
 // HandleAlgorithms returns a list of all registered sorting algorithms.
 func HandleAlgorithms(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		sendJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -29,7 +48,7 @@ type SortRequest struct {
 // HandleSort executes a sort using the specified algorithm and input array.
 func HandleSort(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		sendJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -38,30 +57,30 @@ func HandleSort(w http.ResponseWriter, r *http.Request) {
 
 	var req SortRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON payload or body too large", http.StatusBadRequest)
+		sendJSONError(w, "Invalid JSON payload or body too large", http.StatusBadRequest)
 		return
 	}
 
 	if len(req.Array) == 0 {
-		http.Error(w, "Array cannot be empty", http.StatusBadRequest)
+		sendJSONError(w, "Array cannot be empty", http.StatusBadRequest)
 		return
 	}
 
 	if len(req.Array) > 500 {
-		http.Error(w, "Array is too large (max 500 items)", http.StatusBadRequest)
+		sendJSONError(w, "Array is too large (max 500 items)", http.StatusBadRequest)
 		return
 	}
 
 	for _, v := range req.Array {
 		if v < -100000 || v > 100000 {
-			http.Error(w, "Array values must be within [-100,000, 100,000]", http.StatusBadRequest)
+			sendJSONError(w, "Array values must be within [-100000, 100000]", http.StatusBadRequest)
 			return
 		}
 	}
 
 	s, ok := sorter.Get(req.Algorithm)
 	if !ok {
-		http.Error(w, "Unknown algorithm", http.StatusBadRequest)
+		sendJSONError(w, "Unknown algorithm", http.StatusBadRequest)
 		return
 	}
 

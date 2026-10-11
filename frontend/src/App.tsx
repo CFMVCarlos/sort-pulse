@@ -7,7 +7,9 @@ import { VisualizerPanel } from './components/VisualizerPanel';
 import { AlgorithmInfoCard } from './components/AlgorithmInfoCard';
 import type { BarState } from './components/CanvasVisualizer';
 import { audioEngine } from './utils/audio';
-import { AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Toast } from './components/ui/toast';
+import { Skeleton } from './components/ui/skeleton';
 
 function App() {
   const [algorithms, setAlgorithms] = useState<AlgorithmMeta[]>([]);
@@ -60,6 +62,8 @@ function App() {
   // Audio state
   const [isMuted, setIsMuted] = useState<boolean>(audioEngine.getMuted());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isLoadingAlgorithms, setIsLoadingAlgorithms] = useState<boolean>(true);
 
   // Ref for timer to clear it
   const timerRef = useRef<number | null>(null);
@@ -82,6 +86,7 @@ function App() {
 
   const loadAlgorithms = async () => {
     try {
+      setIsLoadingAlgorithms(true);
       setErrorMessage(null);
       const algos = await fetchAlgorithms();
       setAlgorithms(algos);
@@ -91,6 +96,8 @@ function App() {
     } catch (error) {
       console.error("Failed to load algorithms:", error);
       setErrorMessage("Could not connect to the backend server. Ensure the server is running on :8080.");
+    } finally {
+      setIsLoadingAlgorithms(false);
     }
   };
 
@@ -159,6 +166,7 @@ function App() {
     setBarStates(new Array(inputArr.length).fill('default'));
 
     try {
+      setIsGenerating(true);
       setErrorMessage(null);
       const newTrace = await fetchSortTrace(selectedAlgorithm, inputArr);
       setTrace(newTrace);
@@ -178,6 +186,8 @@ function App() {
       console.error("Failed to fetch sort trace:", error);
       setErrorMessage("Failed to calculate sorting steps. Please try again.");
       setIsPlaying(false);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -372,16 +382,19 @@ function App() {
   return (
     <div className="min-h-screen w-full bg-slate-50/50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col items-center justify-start p-3 sm:p-6 lg:p-8 font-sans antialiased transition-colors duration-200">
       {errorMessage && (
-        <div
-          role="alert"
-          className="w-full max-w-7xl mb-4 flex items-center gap-2.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-4 text-sm font-medium text-red-800 dark:text-red-300 shadow-xs"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-          <span>{errorMessage}</span>
+        <Toast message={errorMessage} onClose={() => setErrorMessage(null)} />
+      )}
+
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Generating execution trace...</span>
+          </div>
         </div>
       )}
 
-      <main className="w-full max-w-7xl flex flex-col gap-5 sm:gap-6">
+      <main className="w-full max-w-7xl flex flex-col gap-5 sm:gap-6 relative">
         {/* Upper section: 2 columns (Visualizer on top on mobile, Controls on left on desktop) */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
           {/* Visualizer ("bars") Column with embedded timeline scrubber and stats */}
@@ -406,49 +419,60 @@ function App() {
 
           {/* Controls Column */}
           <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-4 flex">
-            <ControlBar
-              algorithms={algorithms}
-              selectedAlgorithm={selectedAlgorithm}
-              onAlgorithmChange={(id) => {
-                setSelectedAlgorithm(id);
-                setTrace(null);
-                setCurrentStepIndex(0);
-                setIsPlaying(false);
-                const restoreArr = baseArrayRef.current.length > 0 ? [...baseArrayRef.current] : (trace ? [...trace.initial_array] : currentArray);
-                setCurrentArray([...restoreArr]);
-                setBarStates(new Array(restoreArr.length).fill('default'));
-                setCurrentComparisons(0);
-                setCurrentSwaps(0);
-                cachedStateRef.current = {
-                  trace: null,
-                  stepIndex: -1,
-                  array: [],
-                  sortedIndices: new Set<number>(),
-                  comparisons: 0,
-                  swaps: 0,
-                };
-              }}
-              arraySize={arraySize}
-              onArraySizeChange={handleArraySizeChange}
-              onGenerateArray={(type) => generateArray(type, arraySize)}
-              selectedArrayType={selectedArrayType}
-              isPlaying={isPlaying}
-              onTogglePlay={togglePlay}
-              speedLevel={speedLevel}
-              onSpeedLevelChange={setSpeedLevel}
-              isMuted={isMuted}
-              onToggleMute={toggleMute}
-              isDark={isDark}
-              onToggleTheme={toggleTheme}
-            />
+            {isLoadingAlgorithms ? (
+              <div className="space-y-4 w-full bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-64 w-full mt-4 flex-1" />
+              </div>
+            ) : (
+              <ControlBar
+                algorithms={algorithms}
+                selectedAlgorithm={selectedAlgorithm}
+                onAlgorithmChange={(id) => {
+                  setSelectedAlgorithm(id);
+                  setTrace(null);
+                  setCurrentStepIndex(0);
+                  setIsPlaying(false);
+                  const restoreArr = baseArrayRef.current.length > 0 ? [...baseArrayRef.current] : (trace ? [...trace.initial_array] : currentArray);
+                  setCurrentArray([...restoreArr]);
+                  setBarStates(new Array(restoreArr.length).fill('default'));
+                  setCurrentComparisons(0);
+                  setCurrentSwaps(0);
+                  cachedStateRef.current = {
+                    trace: null,
+                    stepIndex: -1,
+                    array: [],
+                    sortedIndices: new Set<number>(),
+                    comparisons: 0,
+                    swaps: 0,
+                  };
+                }}
+                arraySize={arraySize}
+                onArraySizeChange={handleArraySizeChange}
+                onGenerateArray={(type) => generateArray(type, arraySize)}
+                selectedArrayType={selectedArrayType}
+                isPlaying={isPlaying}
+                onTogglePlay={togglePlay}
+                speedLevel={speedLevel}
+                onSpeedLevelChange={setSpeedLevel}
+                isMuted={isMuted}
+                onToggleMute={toggleMute}
+                isDark={isDark}
+                onToggleTheme={toggleTheme}
+              />
+            )}
           </div>
         </section>
 
         {/* Lower section: 100% full width Algorithm Description & Complexities Card */}
         <section className="w-full">
-          <AlgorithmInfoCard
-            algorithm={algorithms.find((a) => a.id === selectedAlgorithm) || null}
-          />
+          {isLoadingAlgorithms ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : (
+            <AlgorithmInfoCard
+              algorithm={algorithms.find((a) => a.id === selectedAlgorithm) || null}
+            />
+          )}
         </section>
       </main>
     </div>

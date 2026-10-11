@@ -60,8 +60,8 @@ func main() {
 		http.FileServer(http.FS(distFS)).ServeHTTP(w, r)
 	})
 
-	// Wrap mux with CORS middleware
-	handler := api.WithCORS(mux)
+	// Wrap mux with middlewares (Recovery -> CORS -> mux)
+	handler := api.WithRecovery(api.WithCORS(mux))
 
 	addr := fmt.Sprintf(":%d", *port)
 	log.Printf("Starting server on %s", addr)
