@@ -35,7 +35,7 @@
   - **Distribution Sorts**: Counting Sort, Radix Sort (LSD), Bucket Sort, and Pigeonhole Sort.
   - **Hybrid Sorts**: TimSort (Python/Java standard) and IntroSort (C++ `std::sort` standard).
 - 🌓 **Dynamic Light & Dark Themes**: Pixel-perfect light and dark themes with system preference detection and persistent localStorage toggle.
-- ⏯️ **Precision Playback & Scrubbing**: Play, pause, speed adjustment (1x to 50x), bidirectional discrete single-stepping, and timeline scrubbing across thousands of steps.
+- ⏯️ **Precision Playback & Scrubbing**: Play, pause, speed adjustment (1x to 4096x), bidirectional discrete single-stepping, and timeline scrubbing across thousands of steps.
 - 🎨 **Hardware-Accelerated 60 FPS Canvas**: Smooth, responsive rendering with intuitive visual state indicators for active comparisons, swaps, pivots, and sorted elements.
 - 🎵 **Web Audio API Tone Synthesizer**: Dynamic pitch mapping proportional to array element values—listen to sorting patterns, partitions, and convergence in real time.
 - 📊 **Real-Time Pedagogical Metrics**: Instantaneous tracking of comparison counts, swap/overwrite counts, compute latency (in microseconds), and asymptotic Big-O badges.
@@ -68,7 +68,7 @@ The HTML5 Canvas visualizer highlights element states at each discrete step usin
 | **Array Size Slider** | Resize Array | Adjust dataset size from 25 up to 500 elements. |
 | **Preset Generators** | Array Distribution | Generate **Random**, **Reverse**, or **Nearly Sorted** (10% perturbation) initial arrays. |
 | <kbd>Play</kbd> / <kbd>Pause</kbd> | Toggle Animation | Start or pause the sorting trace replay. |
-| **Speed Slider** | Dynamic Rate | Toggle between 7 speed presets: `1x`, `2x`, `4x`, `8x`, `16x`, `32x`, and `50x`. |
+| **Speed Slider** | Dynamic Rate | Toggle between 13 speed presets: `1x`, `2x`, `4x`, `8x`, `16x`, `32x`, `64x`, `128x`, `256x`, `512x`, `1024x`, `2048x`, and `4096x`. |
 | <kbd>⏮ Step Back</kbd> | Rewind Frame | Step backward exactly one discrete operation. |
 | **Timeline Scrubber** | Direct Navigation | Scrub forward or backward across the entire sorting trace history. |
 | <kbd>Step Forward ⏭</kbd> | Advance Frame | Step forward exactly one discrete operation. |
