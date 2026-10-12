@@ -227,9 +227,6 @@ sortpulse/
 │       │   ├── ControlBar.tsx       # Playback, array generation, speed & scrub controls
 │       │   └── AlgorithmInfoCard.tsx# Pedagogical Big-O complexities and descriptions
 │       └── utils/audio.ts       # Web Audio API tone generator and synthesizer
-├── scripts/
-│   ├── build.sh                 # Full end-to-end frontend build & Go binary compilation
-│   └── check-commit-msg.sh      # Conventional Commits format validator
 ├── lefthook.yml                 # Git pre-commit & commit-msg hooks configuration
 ├── Makefile                     # Developer workflow task targets
 └── README.md                    # Project showcase, architecture & API guide
@@ -253,12 +250,6 @@ SortPulse packages the entire frontend directly into the Go executable, producin
 Using `make` (recommended):
 ```bash
 make build
-./sortpulse
-```
-
-Or using the build script directly:
-```bash
-./scripts/build.sh
 ./sortpulse
 ```
 
