@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -21,17 +21,18 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/algorithms", api.HandleAlgorithms)
-	mux.HandleFunc("/api/sort", api.HandleSort)
+	mux.HandleFunc("GET /api/algorithms", api.HandleAlgorithms)
+	mux.HandleFunc("POST /api/sort", api.HandleSort)
 
 	// Serve frontend
 	distFS, err := frontend.DistFS()
 	if err != nil {
-		log.Fatalf("Failed to sub embedded frontend filesystem: %v", err)
+		slog.Error("Failed to sub embedded frontend filesystem", "error", err)
+		os.Exit(1)
 	}
 
 	// Custom handler for serving static files with SPA fallback
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		// Clean the path
 		path := r.URL.Path
 		if path == "/" {
@@ -64,7 +65,7 @@ func main() {
 	handler := api.WithRecovery(api.WithCORS(mux))
 
 	addr := fmt.Sprintf(":%d", *port)
-	log.Printf("Starting server on %s", addr)
+	slog.Info("Starting server", "addr", addr)
 
 	srv := &http.Server{
 		Addr:              addr,
@@ -76,6 +77,7 @@ func main() {
 	}
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server failed to start: %v", err)
+		slog.Error("Server failed to start", "error", err)
+		os.Exit(1)
 	}
 }
